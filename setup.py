@@ -12,11 +12,11 @@ def get_readme():
 
 setup(
     name="akademy",
-    version="0.1.0",
+    version="0.1.1",
     url="https://github.com/alphazwest/akademy",
     author="Zack West",
     author_email="alphazwest@gmail.com",
-    description="Akademy: A Reinforcement Learning Framework",
+    description="akademy: A Reinforcement Learning Framework",
     license="BSD-3-Clause",
     keywords=[
         "reinforcement learning", "quantitative trading", "fintech",

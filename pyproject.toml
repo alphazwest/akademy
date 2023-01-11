@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "akademy"
-version = "0.1.0"
+version = "0.1.1"
 authors = [
   { name="Zack West", email="alphazwest@gmail.com" },
 ]
-description = "AKademy: A Reinforcement Learning Framework"
+description = "akademy: A Reinforcement Learning Framework"
 readme = "README.md"
 requires-python = ">=3.7"
 license = {text = "BSD-3-Clause"}

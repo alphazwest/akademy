@@ -8,8 +8,8 @@ import torch
 from torch import tensor
 
 from akademy.common.utils import remove_old_file_versions
-from akademy.models.base_models.agent import Agent
-from akademy.models.base_models.epsilon_greedy import EpsilonGreedy
+from akademy.models.base_models import Agent
+from akademy.models.base_models import EpsilonGreedy
 from akademy.models.experience_replay_memory import ExperienceReplayMemory
 from akademy.models.networks.three_layer_linear import ThreeLayerLinear
 

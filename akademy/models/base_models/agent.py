@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from akademy.models.typedefs import State, Action
+from akademy.common.typedefs import State, Action
 
 
 class Agent(ABC):

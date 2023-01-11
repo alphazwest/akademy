@@ -172,4 +172,3 @@ def minmax_normalize(data: np.ndarray) -> np.ndarray:
     _min = np.min(data)
     _ptp = np.ptp(data)
     return (data-_min)/_ptp
-

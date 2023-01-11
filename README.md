@@ -5,7 +5,7 @@ reinforcement learning algorithms focused on quantitative trading and
 time-series forecasting. This module is a work-in-progress and should, at no
 time, be assumed to be designed well or be free of bugs.
 
-## Getting Started
+# Overview
 Akademy is designed using an `Agent`-`Environment` model such that `Agent`-class
 objects ingest information from `Environment`-class objects (`Env`), produce
 an `Action`, which is then applied to the `Environment` which results in a
@@ -13,6 +13,45 @@ change in `State` and possible reward to offer feedback to the agent.
 
 *Note*: this module does not provide any training routines -- only the object class
 that can be used to support the implementation of custom training routines.
+
+# Getting Started
+
+To install `academy` use the following command in the desired Python 3.7+
+environment:
+
+`pip install academy`
+
+Once installed, developers will have access to `Agent`, `TradeEnv`, and `Network`
+class objects in which to design Reinforcement Learning algorithms to train models.
+
+Sample training routine:
+
+```python
+from akademy.models.envs import TradeEnv
+from akademy.models.agents import DQNAgent
+from akademy.common.utils import load_spy_daily
+
+# loads the dataset used during training
+data = load_spy_daily(count=2500)
+
+# load the Trading Environment
+env = TradeEnv(
+    data=data,
+    window=50,
+    asset="spy",
+)
+
+# load the agent to train
+agent = DQNAgent(
+    env=env
+)
+
+# load user-defined training routine
+training_routine(
+    agent=agent,
+    env=env
+)
+```
 
 ## Tests
 Unit testing can be run via the following command:

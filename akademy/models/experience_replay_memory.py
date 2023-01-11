@@ -4,7 +4,7 @@ import numpy as np
 from numpy import ndarray
 
 from akademy.models.base_models.replay_memory import ReplayMemory
-from akademy.models.typedefs import State, Action
+from akademy.common.typedefs import State, Action
 
 
 class ExperienceReplayMemory(ReplayMemory):

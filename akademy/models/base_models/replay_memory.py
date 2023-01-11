@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 from typing import Any, NoReturn, Iterable
 
-from akademy.models.typedefs import State, Action
+from akademy.common.typedefs import State, Action
 
 
 class ReplayMemory(ABC):
