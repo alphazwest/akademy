@@ -1,4 +1,4 @@
-from typing import Tuple, NoReturn
+from typing import Tuple, NoReturn, Sequence
 
 import numpy as np
 from numpy import ndarray
@@ -14,8 +14,11 @@ class ExperienceReplayMemory(ReplayMemory):
         Lin, LJ. Self-improving reactive agents based on reinforcement learning,
         planning and teaching. Mach Learn 8, 293–321 (1992).
         https://doi.org/10.1007/BF00992699
+    Args:
+        state_shape: Tuple of a Tensor's dimensions e.g. (251, ) for 50 window
+        memsize: total number of possible experiences to hold
     """
-    def __init__(self, state_shape: tuple, memsize: int = 10000):
+    def __init__(self, state_shape: Sequence[int], memsize: int = 10000):
         self.mem_count = 0
         self.memsize = memsize
         self.state_shape = state_shape
@@ -91,13 +94,11 @@ class ExperienceReplayMemory(ReplayMemory):
 
     def __len__(self) -> int:
         """
-        The length of the Experience Buffer is reported as the max of the
-        self.mem_count and self.memsize such that the __len__ property will
-        never be larger than the maximum size of the ExperienceReplay object's
-        number of total available samples, regardless of how many unique
-        entries have been made via the <add> function.
+        Length is reported as the minimum of the count of added experiences and
+        the maximum number of experiences such that the total possible range
+        of length values is [0, memsize].
         Returns:
             integer value representing the current capacity of the
             ExperienceReplay object in the range of (0, memsize]
         """
-        return max(self.mem_count, self.memsize)
+        return min(self.mem_count, self.memsize)

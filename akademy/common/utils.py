@@ -9,7 +9,7 @@ from akademy.common import project_paths
 
 def format_float(value: float, do_rounding: bool = True) -> str:
     """
-    Convenience function to adjust report output formatting.
+    Convenience function to adjust report checkpoint_save_dir formatting.
     Turns floating point numbers into comma-separated strings
     rounded to the nearest 2 decimal places.
     """

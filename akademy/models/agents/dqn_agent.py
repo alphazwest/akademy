@@ -1,6 +1,6 @@
 import os
 import random
-from typing import Tuple
+from typing import Tuple, Sequence
 
 from gymnasium import Env
 import numpy as np
@@ -20,13 +20,25 @@ class DQNAgent(EpsilonGreedy, Agent):
     data, an epsilon-greedy akademy algorithm to selection a percentage of
     random actions, and a fully-connected neural network for decisions.
     Args:
-        env: OpenAI Gym compatible environment in which to train
+        action_count: the number of checkpoint_save_dir features in the neural network.
+        state_shape: the shape of the input features in the network
+        epsilon_min: min value for Epsilon-Greedy exploration. Default: .001
+        gamma: discount rate for future rewards in value function. Default: .95
+        batch_size: number of previous experiences on which to train. Default: 64
+        learning_rate (α): the rate at which model weights are adjusted wrt to loss.
+            Default: .001
+        hidden_n: the number of nodes in the hidden network layer. Default: 512
+        checkpoint_save_dir: filepath to directory in which model weights are
+            saved incrementally. Default None saves to current working directory.
+        cpu_mode: Optional flag to enable non-GPU training for e.g. non-CUDA
+            enabled machines.
     """
     __name__ = "dqn_agent"
 
     def __init__(
             self,
-            env: Env,
+            action_count: int,
+            state_shape: Sequence[int],
             epsilon_min: float = .001,
             gamma: float = .95,
             batch_size: int = 64,
@@ -42,22 +54,24 @@ class DQNAgent(EpsilonGreedy, Agent):
         self.batch_size = batch_size
         self.hidden_n = hidden_n
         self.learning_rate = learning_rate
-        self.output = '.' if not checkpoint_save_dir else checkpoint_save_dir
+        self.checkpoint_save_dir = '.' if not checkpoint_save_dir else checkpoint_save_dir
         self.epoch = 0
         self.cpu_mode = cpu_mode
+        self.action_count = action_count
+        self.state_shape = state_shape
 
         # actions are discrete
-        self.actions = list(range(env.action_space.n))
+        self.actions = list(range(action_count))
 
         # defines the memory replay buffer
         self.memory: ExperienceReplayMemory = ExperienceReplayMemory(
-            state_shape=env.observation_space.shape
+            state_shape=self.state_shape
         )
 
         # defines the neural network
         self.policy_network = ThreeLayerLinear(
-            input_n=env.observation_space.shape[0],
-            output_n=env.action_space.n,
+            input_n=self.state_shape[0],
+            output_n=self.action_count,
             hidden_n=self.hidden_n,
             learning_rate=self.learning_rate,
             cpu_mode=self.cpu_mode
@@ -97,7 +111,7 @@ class DQNAgent(EpsilonGreedy, Agent):
 
     def sample_exp(self) -> Tuple[tensor, tensor, tensor, tensor, tensor]:
         """
-        Gets a sample of experiences from the buffer and put all to the akademy
+        Gets a sample of experiences from the buffer and put all to the current
         device as PyTorch tensor objects.
         Returns:
             tuple of tensors representing state, action, reward, next state, dones
@@ -108,14 +122,21 @@ class DQNAgent(EpsilonGreedy, Agent):
             batch_size = len(self.memory)
 
         # sample the experience buffer
-        states, actions, rewards, next_states, dones = self.memory.sample(batch_size=batch_size)
+        states, actions, rewards, next_states, dones = self.memory.sample(
+            batch_size=batch_size
+        )
 
         # convert to tensors
-        states = torch.tensor(states, dtype=torch.float32).to(self.policy_network.device)
-        actions = torch.tensor(actions, dtype=torch.long).to(self.policy_network.device)
-        rewards = torch.tensor(rewards, dtype=torch.float32).to(self.policy_network.device)
-        next_states = torch.tensor(next_states, dtype=torch.float32).to(self.policy_network.device)
-        dones = torch.tensor(dones, dtype=torch.bool).to(self.policy_network.device)
+        states = torch.tensor(
+            states, dtype=torch.float32).to(self.policy_network.device)
+        actions = torch.tensor(
+            actions, dtype=torch.long).to(self.policy_network.device)
+        rewards = torch.tensor(
+            rewards, dtype=torch.float32).to(self.policy_network.device)
+        next_states = torch.tensor(
+            next_states, dtype=torch.float32).to(self.policy_network.device)
+        dones = torch.tensor(
+            dones, dtype=torch.bool).to(self.policy_network.device)
 
         return states, actions, rewards, next_states, dones
 
@@ -150,6 +171,12 @@ class DQNAgent(EpsilonGreedy, Agent):
             remove_old_file_versions(filepath=path, remove_key=self.get_name())
 
         return os.path.exists(path)
+
+    def load(self, *args, **kwargs):
+        """
+        Wrapper function for network's load function
+        """
+        return self.policy_network.load(*args, **kwargs)
 
     def train(self) -> float or None:
         """

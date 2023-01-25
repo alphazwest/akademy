@@ -55,7 +55,7 @@ class TestFileHandlers(TestCase):
             ))
             self.old_version_files.append(output_fname)
             with open(output_fname, 'w')as file:
-                file.write(f"temp file output {i}\n")
+                file.write(f"temp file checkpoint_save_dir {i}\n")
 
     def _delete_old_files(self):
         """
@@ -108,7 +108,7 @@ class TestFileHandlers(TestCase):
 
     def test_format_float(self):
         """
-        Test that the format_float function produces output in the
+        Test that the format_float function produces checkpoint_save_dir in the
         proper format.
         """
         initial = 123456.7891
@@ -131,7 +131,7 @@ class TestFileHandlers(TestCase):
         """
         Tests that all filenames result in the expected extension
         """
-        # tests the expected output extension is produced for all test cases.
+        # tests the expected checkpoint_save_dir extension is produced for all test cases.
         for file, ext in self.files_and_extensions.items():
             self.assertTrue(utils.get_file_extension(file) == ext)
 
@@ -207,4 +207,3 @@ class TestFileHandlers(TestCase):
         # normalize the floats and test
         n = utils.minmax_normalize(data=floats)
         self.assertTrue(list(n), floats_result)
-

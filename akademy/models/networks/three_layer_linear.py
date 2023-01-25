@@ -15,7 +15,7 @@ class ThreeLayerLinear(NetworkBase):
     layers.
     Args:
         input_n: the number of input features to the network.
-        output_n: the number of output features from the last layer.
+        output_n: the number of checkpoint_save_dir features from the last layer.
         hidden_n: the size of the hidden layer features.
         learning_rate: the learning rate at which the optimizer is initialized.
         cpu_mode: optional flag to force CPU mode.
@@ -60,12 +60,13 @@ class ThreeLayerLinear(NetworkBase):
         # put the model to the device
         self.model.to(self.device)
 
-    def load(self, path: str):
+    def load(self, path: str) -> bool:
         """
         Loads the weights from a checkpoint file into the current network.
         """
         logging.info(f'Loading pretrained model: {path}')
         self.model.load_state_dict(torch.load(path))
+        return True
 
     def save(self, path: str):
         """

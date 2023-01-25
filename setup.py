@@ -57,7 +57,7 @@ setup(
     # note: PyTorch allows 3.7 for Windows, but requires >=3.7.6 for Linux
     #       but formally recommends >=3.8.1 when building from source.
     #       see here: https://pypi.org/project/torch/ (check version == 1.13.1)
-    python_requires=">=3.7.6",
+    python_requires=">=3.7",
     install_requires=[
         "pandas==1.5.2",
         "torch==1.13.1",

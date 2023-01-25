@@ -43,7 +43,8 @@ env = TradeEnv(
 
 # load the agent to train
 agent = DQNAgent(
-    env=env
+    action_count=env.action_space.n,
+    state_shape=env.observation_space.shape
 )
 
 # load user-defined training routine
@@ -58,6 +59,9 @@ Unit testing can be run via the following command:
 
 `python -m unittest`
 
+For detailed information the `--verbose` flag can be used. For more detailed 
+usage consult the `unittest` module documentation.
+
 ## Available Data
 This module comes with minimal data for Agents and Environments to train on.
 The current data available is listed below, along with sources for the most
@@ -66,7 +70,7 @@ up-to-date versions as well:
 ### 1. S&P500 
 Location: `/data/SPY.CSV`\
 Start:  `1993-01-29`\
-End:    `2022-09-06`\
+End:    `2023-01-23`\
 Total Rows: `7,454` (excludes header)\
 Header: `Date,Open,High,Low,Close,Adj Close,Volume`\
 Source: https://finance.yahoo.com/quote/SPY/history?p=SPY
