@@ -15,6 +15,13 @@ class Agent(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def load(self) -> bool:
+        """
+        Method to load model state from a pre-trained source.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def infer(self, state: State) -> Action:
         """
         Given an observation of state load network for inference.

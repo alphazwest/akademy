@@ -12,7 +12,7 @@ def get_readme():
 
 setup(
     name="akademy",
-    version="0.1.43",
+    version="0.1.44",
     url="https://github.com/alphazwest/akademy",
     author="Zack West",
     author_email="alphazwest@gmail.com",
