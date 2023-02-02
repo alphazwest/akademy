@@ -199,7 +199,7 @@ class TradeEnv(TradeEnvBase):
             done = True
         return done
 
-    def _make_observation(self) -> np.ndarray:
+    def _make_observation(self) -> pd.DataFrame:
         """
         Fills the observation window up with new state information.
         Note:
@@ -207,12 +207,7 @@ class TradeEnv(TradeEnvBase):
         Returns:
             the current NP array.
         """
-        # -4 cuts off the High, Low, Close and Volume of the last period
-        # leaving only the "open" price known to an observer.
-        raw = self.data.iloc[self.i - self.window: self.i + 1].to_numpy().flatten()[:-4]
-
-        # normalize all observations to [0, 1]
-        return minmax_normalize(data=raw)
+        return self.data.iloc[self.i - self.window: self.i + 1]
 
     def _sample_price(self) -> float:
         """

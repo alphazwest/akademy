@@ -2,7 +2,6 @@ import os
 import random
 from typing import Tuple, Sequence
 
-from gymnasium import Env
 import numpy as np
 import torch
 from torch import tensor

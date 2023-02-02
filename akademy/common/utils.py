@@ -160,6 +160,18 @@ def load_spy_daily(count: int = 0):
     return load_csv_ohlcv_data(project_paths.SPY_DATA, count=count)
 
 
+def flatten_price_obs(obs: pd.DataFrame) -> np.ndarry:
+    """
+    Given a DataFrame (or slice) of
+    """
+    if not all(c in obs.columns for c in
+               ['open', 'high', 'low', 'close', 'volume']):
+        raise Exception("Price observations must contain OHLCV columns.")
+    # converts to NumPy array, flattens the data, and clips all but the opening
+    # price of the last column (current known price)
+    return obs.to_numpy().flatten()[:-4]
+
+
 def minmax_normalize(data: np.ndarray) -> np.ndarray:
     """
     Converts all values within an ndarray to values within the range of 0-1
