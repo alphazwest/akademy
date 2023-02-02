@@ -160,7 +160,7 @@ def load_spy_daily(count: int = 0):
     return load_csv_ohlcv_data(project_paths.SPY_DATA, count=count)
 
 
-def flatten_price_obs(obs: pd.DataFrame) -> np.ndarry:
+def flatten_price_obs(obs: pd.DataFrame) -> np.ndarray:
     """
     Given a DataFrame (or slice) of
     """
