@@ -39,11 +39,11 @@ class DQNAgent(EpsilonGreedy, Agent):
             self,
             action_count: int,
             state_shape: Sequence[int],
+            hidden_n: int,
             epsilon_min: float = .001,
             gamma: float = .95,
             batch_size: int = 64,
             learning_rate: float = .001,
-            hidden_n: int = 512,
             checkpoint_save_dir: str = None,
             cpu_mode: bool = False
     ):
