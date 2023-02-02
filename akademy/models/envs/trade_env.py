@@ -25,8 +25,9 @@ class TradeEnv(TradeEnvBase):
             data: pd.DataFrame,
             window: int,
             asset: str,
+            starting_cash: float = 100000,
             pct_based_rewards: bool = True,
-            fractional: bool = False
+            fractional: bool = False,
     ):
         """
         Trading Environment in which simulated trading can occur. Data should
@@ -36,6 +37,8 @@ class TradeEnv(TradeEnvBase):
         Args:
             data: pandas DataFrame object, indexed by date, with OHLCV dimensions
             window: the number of past periods of which observations are aware.
+            starting_cash: amount of starting cash in the account.
+            asset: name of the asset being traded e.g. SPY.
             pct_based_rewards: if disabled, will calculate rewards as absolute values
                 rather than % based comparisons to Buy/Hold strategies.
             fractional: option to allow non-integer purchases of assets like e.g. BTC
@@ -52,7 +55,7 @@ class TradeEnv(TradeEnvBase):
 
         # configure environment
         self.asset = asset
-        self.starting_cash = 10000
+        self.starting_cash = starting_cash
         self.cash = self.starting_cash
         self.i = self.window
         self.qty = 0

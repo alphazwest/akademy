@@ -21,7 +21,7 @@ class OHLCV:
         self.close = float(close)
         self.volume = int(volume)
 
-    def to_dict(self) -> dict:
+    def __dict__(self) -> dict:
         """
         Dictionary representation of the object.
         """
@@ -38,7 +38,7 @@ class OHLCV:
         """
         JSON-formatted string representation of the object.
         """
-        return json.dumps(self.to_dict())
+        return json.dumps(self.__dict__())
 
     def __str__(self) -> str:
         """
