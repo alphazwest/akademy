@@ -27,7 +27,7 @@ class Trade:
         clarity.
         """
         return {
-            "price": self.price,
+            "price": float(self.price),
             "date": str(self.date.isoformat()),
             "asset": self.asset,
             "qty": self.qty,
