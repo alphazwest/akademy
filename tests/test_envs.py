@@ -61,9 +61,10 @@ class TestTradeEnv(TestCase):
 
     def test_make_observation(self):
         """
-        Observations should be <window_size * 5 (OHLCV) + 1 (current_open)>
+        Observations should be <window_size * + 1 (current_open)> where each
+        element is a 1 x 5 row of OHLCV data.
         """
         self.assertTrue(self.env.window == self.window)
         self.assertTrue(
-            len(self.env._make_observation()) == self.window * 5 + 1
+            len(self.env._make_observation()) == self.window + 1
         )
