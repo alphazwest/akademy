@@ -37,7 +37,7 @@ class DQNAgent(EpsilonGreedy, Agent):
     def __init__(
             self,
             action_count: int,
-            state_shape: Sequence[int],
+            state_shape: tuple,
             hidden_n: int,
             epsilon_min: float = .001,
             gamma: float = .95,
