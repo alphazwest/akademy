@@ -59,7 +59,7 @@ def remove_old_file_versions(
     files = [f for f in os.listdir(file_dir) if remove_key in f]
 
     # remove files matching keep mask
-    if remove_key:
+    if keep_key:
         files = [f for f in files if keep_key not in f]
 
     # sort by filemod time
