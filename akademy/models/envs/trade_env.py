@@ -16,7 +16,6 @@ from akademy.common.utils import format_float
 from akademy.models.base_models.trade_env_base import TradeEnvBase
 from akademy.models.trade import Trade
 from akademy.models.trade_action import TradeAction
-from akademy.common.utils import minmax_normalize
 
 
 class TradeEnv(TradeEnvBase):
@@ -28,6 +27,7 @@ class TradeEnv(TradeEnvBase):
             starting_cash: float = 100000,
             pct_based_rewards: bool = True,
             fractional: bool = False,
+            key: str = "close"
     ):
         """
         Trading Environment in which simulated trading can occur. Data should
@@ -49,6 +49,7 @@ class TradeEnv(TradeEnvBase):
         # store reference to raw data + create initial sample
         self.window = window
         self.data = data
+        self.key = key
 
         # validate the data
         self._validate_data()
@@ -65,7 +66,7 @@ class TradeEnv(TradeEnvBase):
         self._zero = min(self.starting_cash * .0001, 10)
 
         # amounts of fractional holdings where a sale isn't likely to be possible.
-        self._dust = self._zero / self.data['close'].mean()
+        self._dust = self._zero / self.data[self.key].mean()
 
         # if true, allows fractional purchase of assets (e.g. .001 BTC)
         self.fractional = fractional
@@ -143,7 +144,7 @@ class TradeEnv(TradeEnvBase):
         qty = self.starting_cash / self.data.iloc[0]['open']
         if not self.fractional:
             qty = int(qty)
-        end_equity = qty * self.data.iloc[-1]['close']
+        end_equity = qty * self.data.iloc[-1][self.key]
         return end_equity - self.starting_cash, ((end_equity - self.starting_cash) / self.starting_cash) * 100
 
     def _get_info(self) -> dict:
@@ -167,7 +168,7 @@ class TradeEnv(TradeEnvBase):
         qty = (self.starting_cash / self.data.iloc[0]['open'])
         if not self.fractional:
             qty = int(qty)
-        return qty * self.data.iloc[-1]['close']
+        return qty * self.data.iloc[-1][self.key]
 
     def _pnl_pct(self):
         """Calculates current pnl as pct change"""
