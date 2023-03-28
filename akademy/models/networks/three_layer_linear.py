@@ -31,7 +31,7 @@ class ThreeLayerLinear(NetworkBase):
         super().__init__()
 
         # determine on which device the model will be located
-        if not cpu_mode:
+        if cpu_mode is False:
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
         else:
             self.device = "cpu"
@@ -65,8 +65,13 @@ class ThreeLayerLinear(NetworkBase):
         Loads the weights from a checkpoint file into the current network.
         """
         logging.info(f'Loading pretrained model: {path}')
-        self.model.load_state_dict(torch.load(path))
-        return True
+        if self.device == "cpu":
+            state = torch.load(path, map_location='cpu')
+            state = {f'{k.replace("model.", "")}': v for k, v in state.items()}
+        else:
+            state = torch.load(path)
+
+        return self.model.load_state_dict(state_dict=state)
 
     def save(self, path: str):
         """

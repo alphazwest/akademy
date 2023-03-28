@@ -2,6 +2,7 @@ import random
 from unittest import TestCase
 
 from akademy.common.utils import load_spy_daily
+from akademy.models import TradeAction
 from akademy.models.envs.trade_env import TradeEnv
 
 
@@ -46,7 +47,9 @@ class TestTradeEnv(TestCase):
 
                 # iterate state
                 state, reward, done, truncated, info, _deprecated = self.env.step(
-                    action=random.choice([0, 1, 2])
+                    action=random.choice(
+                        [TradeAction.BUY, TradeAction.SELL, TradeAction.HOLD]
+                    )
                 )
         self.assertEqual(count, episodes)
 

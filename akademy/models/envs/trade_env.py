@@ -12,10 +12,11 @@ import pandas as pd
 from gymnasium.core import RenderFrame, ObsType
 from gymnasium.spaces import Discrete, Box
 
-from akademy.common.utils import format_float
+from akademy.common.utils import format_float, make_ohlcv_from_df_row
 from akademy.models.base_models.trade_env_base import TradeEnvBase
 from akademy.models.trade import Trade
 from akademy.models.trade_action import TradeAction
+from akademy.models import OHLCV
 
 
 class TradeEnv(TradeEnvBase):
@@ -26,8 +27,7 @@ class TradeEnv(TradeEnvBase):
             asset: str,
             starting_cash: float = 100000,
             pct_based_rewards: bool = True,
-            fractional: bool = False,
-            key: str = "close"
+            fractional: bool = False
     ):
         """
         Trading Environment in which simulated trading can occur. Data should
@@ -49,7 +49,6 @@ class TradeEnv(TradeEnvBase):
         # store reference to raw data + create initial sample
         self.window = window
         self.data = data
-        self.key = key
 
         # validate the data
         self._validate_data()
@@ -66,7 +65,7 @@ class TradeEnv(TradeEnvBase):
         self._zero = min(self.starting_cash * .0001, 10)
 
         # amounts of fractional holdings where a sale isn't likely to be possible.
-        self._dust = self._zero / self.data[self.key].mean()
+        self._dust = self._zero / self.data['close'].mean()
 
         # if true, allows fractional purchase of assets (e.g. .001 BTC)
         self.fractional = fractional
@@ -144,7 +143,7 @@ class TradeEnv(TradeEnvBase):
         qty = self.starting_cash / self.data.iloc[0]['open']
         if not self.fractional:
             qty = int(qty)
-        end_equity = qty * self.data.iloc[-1][self.key]
+        end_equity = qty * self.data.iloc[-1]['close']
         return end_equity - self.starting_cash, ((end_equity - self.starting_cash) / self.starting_cash) * 100
 
     def _get_info(self) -> dict:
@@ -168,7 +167,7 @@ class TradeEnv(TradeEnvBase):
         qty = (self.starting_cash / self.data.iloc[0]['open'])
         if not self.fractional:
             qty = int(qty)
-        return qty * self.data.iloc[-1][self.key]
+        return qty * self.data.iloc[-1]['close']
 
     def _pnl_pct(self):
         """Calculates current pnl as pct change"""
@@ -200,15 +199,21 @@ class TradeEnv(TradeEnvBase):
             done = True
         return done
 
-    def _make_observation(self) -> pd.DataFrame:
+    def _make_observation(self) -> List[OHLCV]:
         """
-        Fills the observation window up with new state information.
-        Note:
-            normalizes observation data to range of (0, 1) on a per-window basis
+        Creates a collection of OHLCV objects representing a slice of the 
+        current data in the range [i-window - i+1] such that the current
+        period (i) is available with the (window) many previous observations as
+        well. 
+        Note: requires manual implementation of e.g. *not* exposing the OHLCV
+            of the last period to an agent.
         Returns:
-            the current NP array.
+            A list of OHLCV objects for each row in the next observation where
+            the last row is the most recent observation (rows[-1])
         """
-        return self.data.iloc[self.i - self.window: self.i + 1]
+        data = [make_ohlcv_from_df_row(row) for row in
+                self.data.iloc[self.i - self.window: self.i + 1].iterrows()]
+        return data
 
     def _sample_price(self) -> float:
         """
@@ -264,7 +269,7 @@ class TradeEnv(TradeEnvBase):
             price=_price,
             qty=_qty,
             date=self.data.index[self.i].to_pydatetime(),
-            side=TradeAction.BUY.value
+            side=TradeAction.BUY.value  # noqa: it's an int
         )
         logging.debug(f"BUY Action: {report}")
 
@@ -287,13 +292,13 @@ class TradeEnv(TradeEnvBase):
             price=_price,
             qty=_qty,
             date=self.data.index[self.i].to_pydatetime(),
-            side=TradeAction.SELL.value
+            side=TradeAction.SELL.value # noqa: it's an int
         )
         logging.debug(f'SELL: {report}')
 
     def _hold(self):
         """
-        For book-keeping purposes, to track the total number of
+        For bookkeeping purposes, to track the total number of
         actions. Hold actions don't really do anything that would
         need a record, in the Buy/Sell context.
         """
@@ -304,24 +309,24 @@ class TradeEnv(TradeEnvBase):
             price=_price,
             qty=self.qty,
             date=self.data.index[self.i].to_pydatetime(),
-            side=TradeAction.HOLD.value
+            side=TradeAction.HOLD.value # noqa: it's an int
         )
         logging.debug(f'HOLD: {report}')
 
-    def _take_action(self, action: int):
+    def _take_action(self, action: TradeAction):
         """Applies an action to the environment"""
-        if action == TradeAction.BUY.value:
+        if action == TradeAction.BUY:
             return self._buy()
-        elif action == TradeAction.SELL.value:
+        elif action == TradeAction.SELL:
             return self._sell()
-        elif action == TradeAction.HOLD.value:
+        elif action == TradeAction.HOLD:
             return self._hold()
 
         # shouldn't ever reach this
         else:
             raise Exception(f"Invalid Action: {action}")
 
-    def step(self, action: int) -> Tuple[np.array, float, bool, bool, dict, bool]:
+    def step(self, action: TradeAction) -> Tuple[List[OHLCV], float, bool, bool, dict, bool]:
         """
         Applies an action to the current environment and returns an observation
         of the resulting state.

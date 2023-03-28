@@ -1,12 +1,13 @@
+from copy import deepcopy
 import os
-import random
-from typing import Tuple, Sequence
+from typing import Tuple, List, NoReturn
 
 import numpy as np
 import torch
 from torch import tensor
 
-from akademy.common.utils import remove_old_file_versions
+from akademy.common.utils import remove_old_file_versions, minmax_normalize
+from akademy.models import OHLCV, TradeAction
 from akademy.models.base_models import Agent
 from akademy.models.base_models import EpsilonGreedy
 from akademy.models.experience_replay_memory import ExperienceReplayMemory
@@ -81,6 +82,37 @@ class DQNAgent(EpsilonGreedy, Agent):
         Returns the current value of epsilon.
         """
         return self.epsilon
+    
+    def _prep_raw_state(self, state: List[OHLCV]) -> np.ndarray:
+        """
+        Combines a collection of OHCLV objects into a 1D numpy array where the
+        last object (state[-1]) only retains its Open value. Also normalizes
+        the data into a range of 0-1.
+        Example:
+            [
+             [1, 2, 3],
+             [4, 5, 6],
+             [7, 8, 9]
+            ]
+            would convert into [1, 2, 3, 4, 5, 6, 7] where 8 and 9 are dropped
+        """
+        # removes the last
+        _state = deepcopy(state)  # don't mess with the original
+        last = _state.pop()
+
+        # creates list of values, in order for each
+        _state = [[s.open, s.high, s.low, s.close, s.volume] for s in _state]
+
+        # add everything back together into a 1-D array
+        _state = np.concatenate([np.array(s) for s in _state])
+        _state = np.append(_state, last.open)
+
+        # normalize
+        _state = minmax_normalize(_state)
+
+        # reshape for PyTorch
+        _state = np.reshape(_state, [1, len(_state)])
+        return _state
 
     def get_replay_memory(self) -> ExperienceReplayMemory:
         """
@@ -94,19 +126,52 @@ class DQNAgent(EpsilonGreedy, Agent):
         """
         return self.__name__
 
-    def get_action(self, state: np.ndarray) -> int:
+    def save_replay_memory(
+            self, state: List[OHLCV], action: int, reward: float,
+            next_state: List[OHLCV], done: bool
+    ) -> NoReturn:
+        """
+        Saves a single episodic memory to the Agent's replay memory buffer.
+        """
+        # this is horribly inefficient to re-convert these over and over, but
+        # currently allows Agents to define their own observation dimensions
+        # such that the TradeEnv is only responsible for outputting the raw data
+        state = self._prep_raw_state(state=state)
+        next_state = self._prep_raw_state(state=next_state)
+
+        # saves the memory
+        self.get_replay_memory().add(
+            state=state,
+            next_state=next_state,
+            action=action,
+            reward=reward,
+            done=done
+        )
+    
+    def get_action(self, state: List[OHLCV]) -> TradeAction:
         """
         Epsilon-Greedy algorithm to choose random vs. optimal actions using the
         Policy network at all times.
+        Args:
+            state: A list of OHLCV objects representing the current a previous
+                pricing periods, where the state[-1] should be the most recent.
         """
-        if random.random() < self.epsilon:
-            return random.choice(self.actions)
+        # apply the random action based on current epsilon value
+        # if random.random() < self.epsilon:
+        #     return random.choice(self.actions)
 
+        # prepare the state for PyTorch -> np.array
+        state = self._prep_raw_state(state=state)
+
+        # create tensor from state, get max action
         state = torch.tensor(state).float().detach()
         state = state.to(self.policy_network.device)
         state = state.unsqueeze(0)
         q_values = self.policy_network(state)
-        return torch.argmax(q_values).item()
+        action =  torch.argmax(q_values).item()
+
+        # return action as a TradeAction object
+        return TradeAction.get_action_from_value(value=action)
 
     def sample_exp(self) -> Tuple[tensor, tensor, tensor, tensor, tensor]:
         """
@@ -139,13 +204,16 @@ class DQNAgent(EpsilonGreedy, Agent):
 
         return states, actions, rewards, next_states, dones
 
-    def infer(self, state: np.ndarray) -> int:
+    def infer(self, state: List[OHLCV]) -> TradeAction:
         """
         Make an inference using the policy network and return the action with
         the maximum reward probability.
         """
         # disable batch normalization and dropouts
         self.policy_network.eval()
+        
+        # get partial state
+        state = self._prep_raw_state(state=state)
 
         # load w/o backprop and autograd to save memory
         with torch.no_grad():
@@ -153,7 +221,8 @@ class DQNAgent(EpsilonGreedy, Agent):
             state = state.to(self.policy_network.device)
             state = state.unsqueeze(0)
             q_values = self.policy_network(state)
-            return torch.argmax(q_values).item()
+            action = torch.argmax(q_values).item()
+            return TradeAction.get_action_from_value(action)
 
     def save(self, path: str, delete_old: bool = True) -> True:
         """
@@ -171,11 +240,12 @@ class DQNAgent(EpsilonGreedy, Agent):
 
         return os.path.exists(path)
 
-    def load(self, *args, **kwargs):
+    def load(self, *args, **kwargs) -> bool:
         """
         Wrapper function for network's load function
         """
-        return self.policy_network.load(*args, **kwargs)
+        self.policy_network.load(*args, **kwargs)
+        return True
 
     def train(self) -> float or None:
         """

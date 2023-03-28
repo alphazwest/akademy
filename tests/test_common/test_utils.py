@@ -7,6 +7,8 @@ import pandas as pd
 
 from akademy.common import utils
 from akademy.common import project_paths
+from akademy.common.utils import sample_ohlcv_data
+from akademy.models import OHLCV
 
 
 class TestFileHandlers(TestCase):
@@ -207,3 +209,9 @@ class TestFileHandlers(TestCase):
         # normalize the floats and test
         n = utils.minmax_normalize(data=floats)
         self.assertTrue(list(n), floats_result)
+
+    def test_sample_ohlcv_data(self):
+        """Test generating some sample OHLCV data"""
+        data = sample_ohlcv_data(10)
+        self.assertTrue(len(data) == 10)
+        self.assertTrue(type(data[0]) == OHLCV)

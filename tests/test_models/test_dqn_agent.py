@@ -5,6 +5,8 @@ import numpy as np
 import torch
 from torch import Tensor
 
+from akademy.common.utils import sample_ohlcv_data
+from akademy.models import TradeAction
 from akademy.models.agents import DQNAgent
 from akademy.models.base_models import NetworkBase
 from tests.helpers.model_utils import create_mock_trade_environment,\
@@ -214,9 +216,10 @@ class TestDQNAgent(TestCase):
             1. produces the expected output
             2. model weights are unchanged
         """
-        # generate an observation of random values in the dimesion of:
+        # generate an observation of random values in the dimension of:
         # (1, env.window * 5 + 1)
-        obv = np.random.random_sample((1, self.env.observation_space.shape[0]))
+        obv = sample_ohlcv_data(count=self.env.window + 1)
+        valid_actions = [TradeAction.BUY, TradeAction.SELL, TradeAction.HOLD]
 
         # snapshot of the network weights before inference
         pre_state_weights = self.agent.policy_network.state_dict().__str__()
@@ -224,8 +227,8 @@ class TestDQNAgent(TestCase):
         # generated an inference, check is expected value range, type
         action = self.agent.infer(state=obv)
         self.assertTrue(action is not None)
-        self.assertTrue(type(action) == int)
-        self.assertTrue(action in list(range(self.env.action_space.n)))
+        self.assertTrue(type(action) == TradeAction)
+        self.assertTrue(action in valid_actions)
 
         # confirms that inference generation doesn't affect model weights
         self.assertEqual(
@@ -234,13 +237,11 @@ class TestDQNAgent(TestCase):
         )
 
         # generate multiple actions to assert all fall within expected range
-        for _ in range(64):
-            obv = np.random.random_sample(
-                (1, self.env.observation_space.shape[0])
-            )
+        for _ in range(5):
+            obv = sample_ohlcv_data(count=self.env.window + 1)
             action = self.agent.infer(obv)
             self.assertTrue(
-                action in list(range(self.env.action_space.n))
+                action in valid_actions
             )
 
     def test_train(self):

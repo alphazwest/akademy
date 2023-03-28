@@ -1,10 +1,13 @@
 import logging
 import os
+import random
 from typing import List
+from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
 from akademy.common import project_paths
+from akademy.models import OHLCV
 
 
 def format_float(value: float, do_rounding: bool = True) -> str:
@@ -184,3 +187,53 @@ def minmax_normalize(data: np.ndarray) -> np.ndarray:
     _min = np.min(data)
     _ptp = np.ptp(data)
     return (data-_min)/_ptp
+
+
+def make_ohlcv_from_df_row(row: tuple) -> OHLCV:
+    """
+    Makes an OHLCV object from a pandas row
+    """
+    # get pricing data from state for the report
+    _open       = row[1]['open']
+    _high       = row[1]['high']
+    _low        = row[1]['low']
+    _close      = row[1]['close']
+    _volume     = row[1]['volume']
+    # _date       = pandas_timestamp_to_unix(row[0])
+
+    # might need re-evaluating based on formats
+    try:
+        dt = datetime.strptime(str(row[0]), "%Y-%m-%d %H:%M:%S%z")
+    except ValueError as e:
+
+        # without tz info
+        dt = datetime.strptime(str(row[0]), "%Y-%m-%d %H:%M:%S")
+
+    _date = int(dt.timestamp())
+
+    return OHLCV(
+        open=_open, high=_high, low=_low,
+        close=_close, volume=_volume, date=_date
+        )
+
+
+def sample_ohlcv_data(count: int) -> List[OHLCV]:
+    """
+    Generates a collection of OHLCV objects with random values.
+    Args:
+        count: Number of randomized OHLCV objects to return.
+    """
+    prices = []
+    date = datetime.now()
+    for i in range(count):
+        prices.append(
+            OHLCV(
+                open=random.uniform(10., 100.),
+                high=random.uniform(10., 100.),
+                low=random.uniform(10., 100.),
+                close=random.uniform(10., 100.),
+                volume=random.randint(1000, 5000),
+                date=int((date - timedelta(days=i)).timestamp())
+            )
+        )
+    return prices
