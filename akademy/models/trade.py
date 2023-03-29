@@ -19,7 +19,7 @@ class Trade:
         self.qty = qty
         self.side = side
 
-    def __dict__(self) -> dict:
+    def to_dict(self) -> dict:
         """
         Converts the Trade object to a dictionary representation where the
         only conversion is the <side> field such that the TradeAction object
@@ -40,7 +40,7 @@ class Trade:
         that all numerical values are strings and the TradeAction objects in the
         <side> field are converted to "BUY" or "SELL" for clarity.
         """
-        return json.dumps(self.__dict__())
+        return json.dumps(self.to_dict())
 
     def __str__(self) -> str:
         """
